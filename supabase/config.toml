@@ -1,0 +1,4 @@
+project_id = "teqqyognoekqilrndtke"
+
+[functions.identify-recyclable]
+verify_jwt = false
