@@ -9,10 +9,12 @@ const corsHeaders = {
 const CITY_RECYCLING_RULES = {
   Vancouver: {
     plastic: "Blue Bin (containers)",
+    plastic_flexible: "Recycling Depot (flexible plastics)",
     metal: "Blue Bin (containers)",
     paper: "Mixed Paper/Yellow Bag",
     glass: "Glass/Grey Bin",
     organic: "Green Bin (organics)",
+    garbage: "Black/Garbage Bin",
     other: "Recycling Depot (special items)",
   },
   Toronto: {
@@ -110,14 +112,31 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a recycling expert. Analyze images and identify ALL recyclable materials present. 
+            content: `You are a recycling expert specializing in Vancouver's recycling system. Analyze images and identify ALL materials present with specific details.
+            
+            For PLASTICS, identify:
+            - The plastic type (PET #1, HDPE #2, PVC #3, LDPE #4, PP #5, or unknown)
+            - Whether it's rigid plastic (curbside recyclable) or flexible plastic (depot only)
+            - Rigid plastics include: bottles, containers, plates, bowls, cups, food storage, cutlery, straws, hangers, black plastic pots, coffee cups
+            - Flexible plastics include: bags, crinkly wrappers, food storage bags, overwrap, shrink wrap, bubble wrap
+            
+            For ORGANICS, be careful to identify items that CANNOT be composted:
+            - NO to: pet waste, kitty litter, diapers, wax-coated paper
+            - YES to: food scraps, yard waste, coffee grounds, tea bags, compostable paper
+            
+            For PAPER, identify items that CANNOT be recycled:
+            - NO to: wax-coated paper, greasy pizza boxes, tissues, paper towels, napkins
+            - YES to: clean cardboard, newspapers, magazines, office paper, clean paper bags
+            
             Respond ONLY with a JSON object in this exact format:
             {
               "materials": [
                 {
-                  "material": "one of: plastic, metal, paper, glass, organic, or other",
+                  "material": "one of: plastic, metal, paper, glass, organic, garbage, or other",
                   "confidence": "high, medium, or low",
-                  "description": "brief description of this specific item"
+                  "description": "brief description of this specific item",
+                  "plasticType": "if plastic: PET #1, HDPE #2, PVC #3, LDPE #4, PP #5, or unknown",
+                  "plasticCategory": "if plastic: rigid or flexible"
                 }
               ]
             }
@@ -172,12 +191,18 @@ serve(async (req) => {
 
     const cityRules = CITY_RECYCLING_RULES[city as keyof typeof CITY_RECYCLING_RULES] || CITY_RECYCLING_RULES.Vancouver;
 
-    const getInstructions = (material: string) => {
+    const getInstructions = (material: string, plasticType?: string, plasticCategory?: string) => {
       switch (material) {
         case "plastic":
+          if (plasticCategory === "flexible") {
+            return {
+              instructions: `Take flexible plastics to a Recycle BC depot. This includes: plastic bags, crinkly wrappers, food storage bags, overwrap, shrink wrap, and bubble wrap.`,
+              specialNotes: `Plastic Type: ${plasticType || "Check item for number"}. These cannot go in your Blue Bin - they must go to a depot.`,
+            };
+          }
           return {
-            instructions: `Clean and dry the plastic item before recycling. Remove any labels if possible. Check the recycling number on the bottom.`,
-            specialNotes: "Note: Not all plastics are accepted. Look for numbers 1, 2, 4, and 5.",
+            instructions: `Clean and dry the plastic item before recycling. Remove any labels if possible. Place in your Blue Bin.`,
+            specialNotes: `Plastic Type: ${plasticType || "Check item for recycling number"}. Accepted curbside: containers, plates, bowls, cups, cutlery, straws, hangers, black plastic pots.`,
           };
         case "metal":
           return {
@@ -187,7 +212,7 @@ serve(async (req) => {
         case "paper":
           return {
             instructions: "Keep paper clean and dry. Remove any plastic windows from envelopes. Flatten cardboard boxes.",
-            specialNotes: "Avoid: Wax-coated paper, paper towels, and tissues cannot be recycled.",
+            specialNotes: "CAN recycle: clean cardboard, newspapers, magazines, office paper. CANNOT recycle: wax-coated paper, greasy pizza boxes, tissues, paper towels, napkins.",
           };
         case "glass":
           return {
@@ -196,8 +221,13 @@ serve(async (req) => {
           };
         case "organic":
           return {
-            instructions: "Place food scraps and yard waste in your organics bin. No plastic bags.",
-            specialNotes: "Compostable items help reduce landfill waste and create nutrient-rich soil!",
+            instructions: "Place food scraps and yard waste in your Green Bin. No plastic bags.",
+            specialNotes: "CAN compost: food scraps, yard waste, coffee grounds, tea bags. CANNOT compost: pet waste, kitty litter, diapers, wax-coated paper.",
+          };
+        case "garbage":
+          return {
+            instructions: "This item cannot be recycled or composted. Place in your Black/Garbage Bin.",
+            specialNotes: "Items like wax-coated paper, greasy materials, pet waste, and contaminated items go here.",
           };
         default:
           return {
@@ -209,8 +239,16 @@ serve(async (req) => {
 
     const materials = aiResult.materials.map((item: any) => {
       const material = item.material.toLowerCase();
-      const binType = cityRules[material as keyof typeof cityRules] || "Contact local waste management";
-      const { instructions, specialNotes } = getInstructions(material);
+      const plasticType = item.plasticType;
+      const plasticCategory = item.plasticCategory;
+      
+      // Determine bin type based on material and plastic category
+      let binType = cityRules[material as keyof typeof cityRules] || "Contact local waste management";
+      if (material === "plastic" && plasticCategory === "flexible" && "plastic_flexible" in cityRules) {
+        binType = (cityRules as any).plastic_flexible;
+      }
+      
+      const { instructions, specialNotes } = getInstructions(material, plasticType, plasticCategory);
 
       return {
         material: item.material,
@@ -219,6 +257,8 @@ serve(async (req) => {
         specialNotes,
         confidence: item.confidence,
         description: item.description,
+        plasticType,
+        plasticCategory,
       };
     });
 

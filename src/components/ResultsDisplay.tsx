@@ -10,6 +10,8 @@ interface Material {
   specialNotes?: string;
   confidence: string;
   description: string;
+  plasticType?: string;
+  plasticCategory?: string;
 }
 
 interface ResultsDisplayProps {
@@ -56,6 +58,16 @@ const ResultsDisplay = ({ result, imagePreview, onReset }: ResultsDisplayProps) 
                       <Recycle className="w-4 h-4 mr-2" />
                       {item.material}
                     </Badge>
+                    {item.plasticType && (
+                      <Badge variant="outline" className="ml-2 mb-3">
+                        {item.plasticType}
+                      </Badge>
+                    )}
+                    {item.plasticCategory && (
+                      <Badge variant="outline" className="ml-2 mb-3 capitalize">
+                        {item.plasticCategory}
+                      </Badge>
+                    )}
                     <p className="text-sm text-muted-foreground">{item.description}</p>
                   </div>
                   <Badge variant="outline" className="capitalize text-sm">
