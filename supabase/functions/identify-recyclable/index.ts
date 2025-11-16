@@ -8,11 +8,12 @@ const corsHeaders = {
 
 const CITY_RECYCLING_RULES = {
   Vancouver: {
-    plastic: "Blue bin (mixed recycling)",
-    metal: "Blue bin (mixed recycling)",
-    paper: "Blue bin (mixed recycling)",
-    glass: "Blue bin (mixed recycling)",
-    organic: "Green bin (organics)",
+    plastic: "Blue Bin (containers)",
+    metal: "Blue Bin (containers)",
+    paper: "Mixed Paper/Yellow Bag",
+    glass: "Glass/Grey Bin",
+    organic: "Green Bin (organics)",
+    other: "Recycling Depot (special items)",
   },
   Toronto: {
     plastic: "Blue bin",
