@@ -85,15 +85,17 @@ const Index = () => {
 
       // Save to history
       const history = JSON.parse(localStorage.getItem("recycling-history") || "[]");
-      history.push({
-        material: data.material,
-        timestamp: new Date().toISOString(),
+      data.materials.forEach((item: any) => {
+        history.push({
+          material: item.material,
+          timestamp: new Date().toISOString(),
+        });
       });
       localStorage.setItem("recycling-history", JSON.stringify(history));
 
       toast({
         title: "Analysis Complete",
-        description: `Identified: ${data.material}`,
+        description: `Identified ${data.totalItems} item${data.totalItems > 1 ? 's' : ''}`,
       });
     } catch (error: any) {
       toast({

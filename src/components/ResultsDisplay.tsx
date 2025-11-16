@@ -3,12 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Recycle, MapPin, AlertCircle } from "lucide-react";
 
+interface Material {
+  material: string;
+  binType: string;
+  instructions: string;
+  specialNotes?: string;
+  confidence: string;
+  description: string;
+}
+
 interface ResultsDisplayProps {
   result: {
-    material: string;
-    binType: string;
-    instructions: string;
-    specialNotes?: string;
+    materials: Material[];
+    totalItems: number;
   };
   imagePreview: string | null;
   onReset: () => void;
@@ -27,50 +34,72 @@ const ResultsDisplay = ({ result, imagePreview, onReset }: ResultsDisplayProps) 
           />
         )}
 
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-2xl font-bold text-card-foreground mb-2">
-              Material Identified
-            </h2>
-            <Badge
-              className="text-lg px-4 py-2 capitalize"
-              style={{ background: "var(--gradient-primary)" }}
-            >
-              <Recycle className="w-5 h-5 mr-2" />
-              {result.material}
-            </Badge>
-          </div>
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-card-foreground">
+            {result.totalItems === 1 
+              ? "Material Identified" 
+              : `${result.totalItems} Materials Identified`}
+          </h2>
+        </div>
 
-          <div className="p-4 rounded-lg" style={{ backgroundColor: "hsl(var(--accent))" }}>
-            <h3 className="font-semibold text-lg mb-2 flex items-center text-accent-foreground">
-              <MapPin className="w-5 h-5 mr-2" />
-              Recycling Bin
-            </h3>
-            <p className="text-accent-foreground font-medium">{result.binType}</p>
-          </div>
-
-          <div className="p-4 rounded-lg" style={{ backgroundColor: "hsl(var(--muted))" }}>
-            <h3 className="font-semibold text-lg mb-2 text-muted-foreground">
-              Recycling Instructions
-            </h3>
-            <p className="text-muted-foreground">{result.instructions}</p>
-          </div>
-
-          {result.specialNotes && (
+        <div className="space-y-6">
+          {result.materials.map((item, index) => (
             <div
-              className="p-4 rounded-lg border-l-4"
-              style={{
-                backgroundColor: "hsl(var(--accent))",
-                borderColor: "hsl(var(--primary))",
+              key={index}
+              className="p-4 rounded-lg border"
+              style={{ 
+                borderColor: "hsl(var(--border))",
+                backgroundColor: "hsl(var(--accent))"
               }}
             >
-              <h3 className="font-semibold text-lg mb-2 flex items-center text-accent-foreground">
-                <AlertCircle className="w-5 h-5 mr-2" />
-                Special Notes
-              </h3>
-              <p className="text-accent-foreground">{result.specialNotes}</p>
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <Badge
+                      className="text-base px-3 py-1 capitalize mb-2"
+                      style={{ background: "var(--gradient-primary)" }}
+                    >
+                      <Recycle className="w-4 h-4 mr-2" />
+                      {item.material}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                  <Badge variant="outline" className="capitalize">
+                    {item.confidence}
+                  </Badge>
+                </div>
+
+                <div className="p-3 rounded-lg bg-background/50">
+                  <h3 className="font-semibold flex items-center text-sm mb-1">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Recycling Bin
+                  </h3>
+                  <p className="text-sm font-medium">{item.binType}</p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-sm mb-1">Instructions</h3>
+                  <p className="text-sm text-muted-foreground">{item.instructions}</p>
+                </div>
+
+                {item.specialNotes && (
+                  <div
+                    className="p-3 rounded-lg border-l-4"
+                    style={{
+                      backgroundColor: "hsl(var(--muted))",
+                      borderColor: "hsl(var(--primary))",
+                    }}
+                  >
+                    <h3 className="font-semibold text-sm mb-1 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Special Notes
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{item.specialNotes}</p>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </Card>
 
