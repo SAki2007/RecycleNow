@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, History as HistoryIcon } from "lucide-react";
+import { Camera, Upload, History as HistoryIcon, Sparkles, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,13 +118,25 @@ const Index = () => {
     }
   };
 
+  if (result) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto p-4 md:p-8">
+          <ResultsDisplay
+            result={result}
+            imagePreview={imagePreview}
+            onReset={resetAnalysis}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent to-background">
-      <div className="container mx-auto p-4 md:p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            EcoScan
-          </h1>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Header */}
+        <div className="flex justify-end mb-6">
           <div className="flex gap-2 items-center">
             <CitySelector selectedCity={selectedCity} onCityChange={setSelectedCity} />
             <Button
@@ -136,30 +149,61 @@ const Index = () => {
           </div>
         </div>
 
-        {!result ? (
-          <Card className="p-6 md:p-8 max-w-2xl mx-auto" style={{ boxShadow: "var(--shadow-elevated)" }}>
-            <h2 className="text-2xl font-semibold mb-6 text-card-foreground text-center">
-              Scan Your Recyclables
-            </h2>
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <Badge 
+            variant="secondary" 
+            className="mb-4 px-4 py-1.5 bg-accent text-accent-foreground"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            AI-Powered Recycling Assistant
+          </Badge>
+          
+          <h1 className="text-5xl md:text-6xl font-bold mb-4">
+            Recycle<span className="text-primary">Now</span>
+          </h1>
+          
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Take a photo of any item and instantly discover how to recycle it properly.
+            Join the mission to reduce waste and protect our planet.
+          </p>
+        </div>
 
-            {!imagePreview && !stream && (
-              <div className="space-y-4">
+        {/* Upload Area */}
+        <Card className="p-8 md:p-12 mb-12 border-2 border-dashed border-border bg-card">
+          {!imagePreview && !stream && (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
+                  <Upload className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="text-2xl font-semibold mb-2">Upload or Capture an Image</h2>
+                <p className="text-muted-foreground">
+                  Take a photo or upload an image of recyclable materials
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center max-w-md mx-auto">
                 <Button
-                  onClick={startCamera}
-                  className="w-full h-32 text-lg"
-                  style={{ background: "var(--gradient-primary)" }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+                  size="lg"
                 >
-                  <Camera className="w-8 h-8 mr-3" />
-                  Take Photo
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Image
                 </Button>
 
                 <Button
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={startCamera}
                   variant="outline"
-                  className="w-full h-32 text-lg"
+                  className="w-full sm:w-auto"
+                  size="lg"
                 >
-                  <Upload className="w-8 h-8 mr-3" />
-                  Upload Photo
+                  <Camera className="w-4 h-4 mr-2" />
+                  Take Photo
                 </Button>
 
                 <input
@@ -170,62 +214,93 @@ const Index = () => {
                   className="hidden"
                 />
               </div>
-            )}
+            </div>
+          )}
 
-            {stream && (
-              <div className="space-y-4">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-lg"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={capturePhoto}
-                    className="flex-1"
-                    style={{ background: "var(--gradient-primary)" }}
-                  >
-                    Capture
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      stream.getTracks().forEach(track => track.stop());
-                      setStream(null);
-                    }}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
+          {stream && (
+            <div className="space-y-4">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full rounded-lg"
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={capturePhoto}
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                >
+                  Capture
+                </Button>
+                <Button
+                  onClick={() => {
+                    stream.getTracks().forEach(track => track.stop());
+                    setStream(null);
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {imagePreview && !stream && (
+            <div className="space-y-4">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-full rounded-lg max-h-96 object-contain"
+              />
+              {isAnalyzing && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Analyzing your item...</p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          )}
+        </Card>
 
-            {imagePreview && !stream && (
-              <div className="space-y-4">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full rounded-lg"
-                  style={{ boxShadow: "var(--shadow-medium)" }}
-                />
-                {isAnalyzing && (
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                    <p className="mt-4 text-muted-foreground">Analyzing your item...</p>
-                  </div>
-                )}
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="p-6 text-center bg-card">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
+                <Camera className="w-6 h-6 text-primary" />
               </div>
-            )}
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Capture</h3>
+            <p className="text-sm text-muted-foreground">
+              Take a photo of any recyclable/non-recyclable material
+            </p>
           </Card>
-        ) : (
-          <ResultsDisplay
-            result={result}
-            imagePreview={imagePreview}
-            onReset={resetAnalysis}
-          />
-        )}
+
+          <Card className="p-6 text-center bg-card">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
+                <Leaf className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Identify</h3>
+            <p className="text-sm text-muted-foreground">
+              AI analyzes the materials and identifies recycling potential
+            </p>
+          </Card>
+
+          <Card className="p-6 text-center bg-card">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
+                <Upload className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Recycle</h3>
+            <p className="text-sm text-muted-foreground">
+              Get detailed instructions on where and how to recycle properly
+            </p>
+          </Card>
+        </div>
       </div>
     </div>
   );

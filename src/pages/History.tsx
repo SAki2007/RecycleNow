@@ -11,12 +11,12 @@ interface MaterialRecord {
 }
 
 const COLORS = {
-  plastic: "hsl(var(--primary))",
-  metal: "hsl(var(--secondary))",
-  paper: "hsl(142 60% 60%)",
-  glass: "hsl(198 50% 70%)",
-  organic: "hsl(142 45% 50%)",
-  other: "hsl(var(--muted-foreground))",
+  plastic: "hsl(142 71% 45%)",
+  metal: "hsl(198 70% 50%)",
+  paper: "hsl(35 90% 60%)",
+  glass: "hsl(210 70% 60%)",
+  organic: "hsl(80 60% 50%)",
+  other: "hsl(0 0% 60%)",
 };
 
 const History = () => {
@@ -41,7 +41,7 @@ const History = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent to-background p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <Button
           variant="ghost"
@@ -54,7 +54,7 @@ const History = () => {
 
         <h1 className="text-3xl font-bold text-foreground mb-8">Recycling History</h1>
 
-        <Card className="p-6 mb-8" style={{ boxShadow: "var(--shadow-elevated)" }}>
+        <Card className="p-6 mb-8 bg-card">
           <h2 className="text-xl font-semibold mb-4 text-card-foreground">Material Distribution</h2>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -87,15 +87,14 @@ const History = () => {
           )}
         </Card>
 
-        <Card className="p-6" style={{ boxShadow: "var(--shadow-elevated)" }}>
+        <Card className="p-6 bg-card">
           <h2 className="text-xl font-semibold mb-4 text-card-foreground">Material Counts</h2>
           {Object.entries(materialCounts).length > 0 ? (
             <div className="space-y-3">
               {Object.entries(materialCounts).map(([material, count]) => (
                 <div
                   key={material}
-                  className="flex items-center justify-between p-3 rounded-lg"
-                  style={{ backgroundColor: "hsl(var(--accent))" }}
+                  className="flex items-center justify-between p-3 rounded-lg bg-accent"
                 >
                   <span className="font-medium capitalize text-accent-foreground">{material}</span>
                   <span className="text-lg font-bold text-accent-foreground">{count}</span>
