@@ -23,19 +23,18 @@ interface ResultsDisplayProps {
 
 const ResultsDisplay = ({ result, imagePreview, onReset }: ResultsDisplayProps) => {
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <Card className="p-6" style={{ boxShadow: "var(--shadow-elevated)" }}>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Card className="p-6 bg-card">
         {imagePreview && (
           <img
             src={imagePreview}
             alt="Analyzed item"
-            className="w-full max-h-64 object-contain rounded-lg mb-6"
-            style={{ boxShadow: "var(--shadow-medium)" }}
+            className="w-full max-h-80 object-contain rounded-lg mb-6"
           />
         )}
 
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold text-card-foreground">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-card-foreground mb-2">
             {result.totalItems === 1 
               ? "Material Identified" 
               : `${result.totalItems} Materials Identified`}
@@ -46,55 +45,46 @@ const ResultsDisplay = ({ result, imagePreview, onReset }: ResultsDisplayProps) 
           {result.materials.map((item, index) => (
             <div
               key={index}
-              className="p-4 rounded-lg border"
-              style={{ 
-                borderColor: "hsl(var(--border))",
-                backgroundColor: "hsl(var(--accent))"
-              }}
+              className="p-6 rounded-lg border border-border bg-card"
             >
               <div className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex-1">
                     <Badge
-                      className="text-base px-3 py-1 capitalize mb-2"
-                      style={{ background: "var(--gradient-primary)" }}
+                      className="text-base px-4 py-1.5 capitalize mb-3 bg-primary text-primary-foreground"
                     >
                       <Recycle className="w-4 h-4 mr-2" />
                       {item.material}
                     </Badge>
                     <p className="text-sm text-muted-foreground">{item.description}</p>
                   </div>
-                  <Badge variant="outline" className="capitalize">
-                    {item.confidence}
+                  <Badge variant="outline" className="capitalize text-sm">
+                    {item.confidence} confidence
                   </Badge>
                 </div>
 
-                <div className="p-3 rounded-lg bg-background/50">
-                  <h3 className="font-semibold flex items-center text-sm mb-1">
-                    <MapPin className="w-4 h-4 mr-2" />
+                <div className="p-4 rounded-lg bg-accent">
+                  <h3 className="font-semibold flex items-center text-sm mb-2">
+                    <MapPin className="w-4 h-4 mr-2 text-primary" />
                     Recycling Bin
                   </h3>
                   <p className="text-sm font-medium">{item.binType}</p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-sm mb-1">Instructions</h3>
-                  <p className="text-sm text-muted-foreground">{item.instructions}</p>
+                  <h3 className="font-semibold text-sm mb-2">Recycling Instructions</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.instructions}</p>
                 </div>
 
                 {item.specialNotes && (
                   <div
-                    className="p-3 rounded-lg border-l-4"
-                    style={{
-                      backgroundColor: "hsl(var(--muted))",
-                      borderColor: "hsl(var(--primary))",
-                    }}
+                    className="p-4 rounded-lg bg-accent border-l-4 border-primary"
                   >
-                    <h3 className="font-semibold text-sm mb-1 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-2" />
+                    <h3 className="font-semibold text-sm mb-2 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-2 text-primary" />
                       Special Notes
                     </h3>
-                    <p className="text-sm text-muted-foreground">{item.specialNotes}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.specialNotes}</p>
                   </div>
                 )}
               </div>
@@ -103,13 +93,15 @@ const ResultsDisplay = ({ result, imagePreview, onReset }: ResultsDisplayProps) 
         </div>
       </Card>
 
-      <Button
-        onClick={onReset}
-        className="w-full"
-        style={{ background: "var(--gradient-secondary)" }}
-      >
-        Scan Another Item
-      </Button>
+      <div className="flex gap-3">
+        <Button
+          onClick={onReset}
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+          size="lg"
+        >
+          Scan Another Item
+        </Button>
+      </div>
     </div>
   );
 };
