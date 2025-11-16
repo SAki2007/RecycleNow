@@ -109,20 +109,25 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a recycling expert. Analyze images of items and identify the recyclable material type. 
+            content: `You are a recycling expert. Analyze images and identify ALL recyclable materials present. 
             Respond ONLY with a JSON object in this exact format:
             {
-              "material": "one of: plastic, metal, paper, glass, organic, or other",
-              "confidence": "high, medium, or low",
-              "description": "brief description of what you see"
-            }`,
+              "materials": [
+                {
+                  "material": "one of: plastic, metal, paper, glass, organic, or other",
+                  "confidence": "high, medium, or low",
+                  "description": "brief description of this specific item"
+                }
+              ]
+            }
+            If multiple items are visible, include each as a separate object in the materials array.`,
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "What recyclable material is this? Respond with JSON only.",
+                text: "Identify all recyclable materials in this image. List each item separately. Respond with JSON only.",
               },
               {
                 type: "image_url",
@@ -164,46 +169,61 @@ serve(async (req) => {
       throw new Error("Invalid AI response format");
     }
 
-    const material = aiResult.material.toLowerCase();
     const cityRules = CITY_RECYCLING_RULES[city as keyof typeof CITY_RECYCLING_RULES] || CITY_RECYCLING_RULES.Vancouver;
-    const binType = cityRules[material as keyof typeof cityRules] || "Contact local waste management";
 
-    let instructions = "";
-    let specialNotes = "";
+    const getInstructions = (material: string) => {
+      switch (material) {
+        case "plastic":
+          return {
+            instructions: `Clean and dry the plastic item before recycling. Remove any labels if possible. Check the recycling number on the bottom.`,
+            specialNotes: "Note: Not all plastics are accepted. Look for numbers 1, 2, 4, and 5.",
+          };
+        case "metal":
+          return {
+            instructions: "Rinse the metal item to remove any food residue. Aluminum cans and tin cans are widely accepted.",
+            specialNotes: "Tip: Crushing cans saves space in your recycling bin!",
+          };
+        case "paper":
+          return {
+            instructions: "Keep paper clean and dry. Remove any plastic windows from envelopes. Flatten cardboard boxes.",
+            specialNotes: "Avoid: Wax-coated paper, paper towels, and tissues cannot be recycled.",
+          };
+        case "glass":
+          return {
+            instructions: "Rinse the glass container and remove lids. Empty bottles and jars are accepted.",
+            specialNotes: city === "Vancouver" ? "Vancouver accepts all glass colors." : "Separate glass by color if required in your area.",
+          };
+        case "organic":
+          return {
+            instructions: "Place food scraps and yard waste in your organics bin. No plastic bags.",
+            specialNotes: "Compostable items help reduce landfill waste and create nutrient-rich soil!",
+          };
+        default:
+          return {
+            instructions: "This item may require special disposal. Check with your local waste management facility.",
+            specialNotes: "When in doubt, contact your municipality for proper disposal guidelines.",
+          };
+      }
+    };
 
-    switch (material) {
-      case "plastic":
-        instructions = `Clean and dry the plastic item before recycling. Remove any labels if possible. Check the recycling number on the bottom.`;
-        specialNotes = "Note: Not all plastics are accepted. Look for numbers 1, 2, 4, and 5.";
-        break;
-      case "metal":
-        instructions = "Rinse the metal item to remove any food residue. Aluminum cans and tin cans are widely accepted.";
-        specialNotes = "Tip: Crushing cans saves space in your recycling bin!";
-        break;
-      case "paper":
-        instructions = "Keep paper clean and dry. Remove any plastic windows from envelopes. Flatten cardboard boxes.";
-        specialNotes = "Avoid: Wax-coated paper, paper towels, and tissues cannot be recycled.";
-        break;
-      case "glass":
-        instructions = "Rinse the glass container and remove lids. Empty bottles and jars are accepted.";
-        specialNotes = `${city === "Vancouver" ? "Vancouver accepts all glass colors." : "Separate glass by color if required in your area."}`;
-        break;
-      case "organic":
-        instructions = "Place food scraps and yard waste in your organics bin. No plastic bags.";
-        specialNotes = "Compostable items help reduce landfill waste and create nutrient-rich soil!";
-        break;
-      default:
-        instructions = "This item may require special disposal. Check with your local waste management facility.";
-        specialNotes = "When in doubt, contact your municipality for proper disposal guidelines.";
-    }
+    const materials = aiResult.materials.map((item: any) => {
+      const material = item.material.toLowerCase();
+      const binType = cityRules[material as keyof typeof cityRules] || "Contact local waste management";
+      const { instructions, specialNotes } = getInstructions(material);
+
+      return {
+        material: item.material,
+        binType,
+        instructions,
+        specialNotes,
+        confidence: item.confidence,
+        description: item.description,
+      };
+    });
 
     const result = {
-      material: aiResult.material,
-      binType,
-      instructions,
-      specialNotes,
-      confidence: aiResult.confidence,
-      description: aiResult.description,
+      materials,
+      totalItems: materials.length,
     };
 
     console.log("Final result:", result);
